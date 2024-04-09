@@ -14,4 +14,9 @@ Repositorio para las prácticas de la materia Ingeniería de Software I en lengu
 
 #### Práctica 1 - Sección 2
 
-- 
+- WIP...
+
+#### Práctica 2
+
+- [Ejercicio - Eliminación de código repetido](<Práctica 2/CodigoRepetido-Ejercicio.st>)
+
