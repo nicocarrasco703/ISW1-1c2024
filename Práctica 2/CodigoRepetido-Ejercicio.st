@@ -21,31 +21,17 @@ TestCase subclass: #CustomerBookTest
 	poolDictionaries: ''
 	category: 'CodigoRepetido-Ejercicio'!
 
-!CustomerBookTest methodsFor: 'private testing' stamp: 'jcs 4/8/2024 21:54:25'!
-addAndSuspendPonLaCarney
-	
-	| aCustomerBook ponLaCarney |
-	
-	aCustomerBook := CustomerBook new.
-	ponLaCarney := 'Pon LaCarney'.
-	
-	aCustomerBook addCustomerNamed: ponLaCarney.
-	aCustomerBook suspendCustomerNamed: ponLaCarney.
-	
-	^aCustomerBook.
-	! !
-
-!CustomerBookTest methodsFor: 'private testing' stamp: 'jcs 4/8/2024 23:24:50'!
+!CustomerBookTest methodsFor: 'private testing' stamp: 'NC 4/9/2024 19:40:00'!
 assertEqualityOn: aCustomerBook activeCustomerCount: numberOfActiveCustomers suspendedCustomerCount: numberOfSuspendedCustomers customerCount: numberOfCustomers
 
-	self assert: numberOfActiveCustomers equals: aCustomerBook numberOfActiveCustomers.
-	self assert: numberOfSuspendedCustomers equals: aCustomerBook numberOfSuspendedCustomers.
-	self assert: numberOfCustomers equals: aCustomerBook numberOfCustomers.! !
+	self assert: numberOfActiveCustomers equals: (aCustomerBook numberOfTypeOfCustomer: 'active').
+	self assert: numberOfSuspendedCustomers equals: (aCustomerBook numberOfTypeOfCustomer: 'suspended').
+	self assert: numberOfCustomers equals: (aCustomerBook numberOfTypeOfCustomer: '').! !
 
-!CustomerBookTest methodsFor: 'private testing' stamp: 'jcs 4/9/2024 17:03:05'!
+!CustomerBookTest methodsFor: 'private testing' stamp: 'NC 4/9/2024 19:39:55'!
 assertOnlyCustomerOn: aCustomerBook isCustomer: aCustomerName
 
-	self assert: aCustomerBook numberOfCustomers = 1.
+	self assert: (aCustomerBook numberOfTypeOfCustomer: '').
 	self assert: (aCustomerBook includesCustomerNamed: aCustomerName)! !
 
 !CustomerBookTest methodsFor: 'private testing' stamp: 'jcs 4/9/2024 16:50:50'!
@@ -113,7 +99,7 @@ test03CanNotAddACustomerWithEmptyName
 			self assert: anError messageText = CustomerBook customerCanNotBeEmptyErrorMessage.
 			self assert: customerBook isEmpty ]! !
 
-!CustomerBookTest methodsFor: 'testing' stamp: 'jcs 4/9/2024 16:50:50'!
+!CustomerBookTest methodsFor: 'testing' stamp: 'NC 4/9/2024 19:32:42'!
 test04CanNotRemoveAnInvalidCustomer
 	
 	| customerBook johnLennon |
@@ -125,7 +111,7 @@ test04CanNotRemoveAnInvalidCustomer
 	self closureThatShouldTriggerFailure: [ customerBook removeCustomerNamed: 'Paul McCartney' ]
 		errorToCatch: NotFound
 		closureToRunAfterFailure: [ :anError | 
-			self assert: customerBook numberOfCustomers = 1.
+			self assert: ((customerBook numberOfTypeOfCustomer: 'active') = 1).
 			self assert: (customerBook includesCustomerNamed: johnLennon) ]
 ! !
 
@@ -250,29 +236,14 @@ numberOfSuspendedCustomers
 	
 	^suspended size! !
 
-!CustomerBook methodsFor: 'customer management' stamp: 'NR 4/3/2019 10:14:26'!
+!CustomerBook methodsFor: 'customer management' stamp: 'NC 4/9/2024 20:21:24'!
 removeCustomerNamed: aName 
  
-	1 to: active size do: 
-	[ :index |
-		aName = (active at: index)
-			ifTrue: [
-				active removeAt: index.
-				^ aName 
-			] 
-	].
-
-	1 to: suspended size do: 	
-	[ :index |
-		aName = (suspended at: index)
-			ifTrue: [
-				suspended removeAt: index.
-				^ aName 
-			] 
-	].
-	
-	^ NotFound signal.
-! !
+	self removeCustomerNamed: aName 
+	fromCollection: active.
+	self removeCustomerNamed: aName 
+	fromCollection: suspended.
+	^ NotFound signal.! !
 
 !CustomerBook methodsFor: 'customer management' stamp: 'HernanWilkinson 7/6/2011 17:52'!
 signalCustomerAlreadyExists 
@@ -293,6 +264,27 @@ suspendCustomerNamed: aName
 	
 	suspended add: aName
 ! !
+
+
+!CustomerBook methodsFor: 'other methods' stamp: 'NC 4/9/2024 19:29:49'!
+numberOfTypeOfCustomer: aCustomerType
+
+	(aCustomerType = active name) ifTrue: [^active size].
+	(aCustomerType = suspended name) ifTrue: [^suspended size].
+	^active size + suspended size
+! !
+
+!CustomerBook methodsFor: 'other methods' stamp: 'NC 4/9/2024 20:22:10'!
+removeCustomerNamed: aName fromCollection: aCollection
+	
+	1 to: aCollection size do: 
+	[ :index |
+		aName = (aCollection at: index)
+			ifTrue: [
+				aCollection removeAt: index.
+				^ aName 
+			] 
+	].! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
