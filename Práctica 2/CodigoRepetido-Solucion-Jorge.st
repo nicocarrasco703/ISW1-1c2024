@@ -21,20 +21,6 @@ TestCase subclass: #CustomerBookTest
 	poolDictionaries: ''
 	category: 'CodigoRepetido-Ejercicio'!
 
-!CustomerBookTest methodsFor: 'private testing' stamp: 'jcs 4/8/2024 21:54:25'!
-addAndSuspendPonLaCarney
-	
-	| aCustomerBook ponLaCarney |
-	
-	aCustomerBook := CustomerBook new.
-	ponLaCarney := 'Pon LaCarney'.
-	
-	aCustomerBook addCustomerNamed: ponLaCarney.
-	aCustomerBook suspendCustomerNamed: ponLaCarney.
-	
-	^aCustomerBook.
-	! !
-
 !CustomerBookTest methodsFor: 'private testing' stamp: 'jcs 4/8/2024 23:24:50'!
 assertEqualityOn: aCustomerBook activeCustomerCount: numberOfActiveCustomers suspendedCustomerCount: numberOfSuspendedCustomers customerCount: numberOfCustomers
 
@@ -42,20 +28,20 @@ assertEqualityOn: aCustomerBook activeCustomerCount: numberOfActiveCustomers sus
 	self assert: numberOfSuspendedCustomers equals: aCustomerBook numberOfSuspendedCustomers.
 	self assert: numberOfCustomers equals: aCustomerBook numberOfCustomers.! !
 
-!CustomerBookTest methodsFor: 'private testing' stamp: 'jcs 4/9/2024 17:03:05'!
-assertOnlyCustomerOn: aCustomerBook isCustomer: aCustomerName
-
-	self assert: aCustomerBook numberOfCustomers = 1.
-	self assert: (aCustomerBook includesCustomerNamed: aCustomerName)! !
-
-!CustomerBookTest methodsFor: 'private testing' stamp: 'jcs 4/9/2024 16:50:50'!
-closureThatShouldTriggerFailure: closureThatShoudFail errorToCatch: anError closureToRunAfterFailure: closureToBeRunAfterFailure
+!CustomerBookTest methodsFor: 'private testing' stamp: 'jcs 4/10/2024 15:37:10'!
+assertErrorTriggeredOnClosure: closureThatShoudFail errorToCatch: anError closureToRunAfterFailure: closureToBeRunAfterFailure
 
 	[ closureThatShoudFail value.
 	self fail ]
 		on: anError
 		do: closureToBeRunAfterFailure
 	! !
+
+!CustomerBookTest methodsFor: 'private testing' stamp: 'jcs 4/9/2024 17:03:05'!
+assertOnlyCustomerOn: aCustomerBook isCustomer: aCustomerName
+
+	self assert: aCustomerBook numberOfCustomers = 1.
+	self assert: (aCustomerBook includesCustomerNamed: aCustomerName)! !
 
 !CustomerBookTest methodsFor: 'private testing' stamp: 'jcs 4/8/2024 21:08:39'!
 meassureRuntimeInMilliseconds: aClosure
@@ -100,20 +86,20 @@ test02RemovingCustomerShouldNotTakeMoreThan100Milliseconds
 	
 ! !
 
-!CustomerBookTest methodsFor: 'testing' stamp: 'jcs 4/9/2024 16:50:50'!
+!CustomerBookTest methodsFor: 'testing' stamp: 'jcs 4/10/2024 15:37:10'!
 test03CanNotAddACustomerWithEmptyName 
 
 	| customerBook |
 			
 	customerBook := CustomerBook new.
 
-	self closureThatShouldTriggerFailure: [ customerBook addCustomerNamed: '' ]
+	self assertErrorTriggeredOnClosure: [ customerBook addCustomerNamed: '' ]
 		errorToCatch: Error 
 		closureToRunAfterFailure: [ :anError | 
 			self assert: anError messageText = CustomerBook customerCanNotBeEmptyErrorMessage.
 			self assert: customerBook isEmpty ]! !
 
-!CustomerBookTest methodsFor: 'testing' stamp: 'jcs 4/9/2024 16:50:50'!
+!CustomerBookTest methodsFor: 'testing' stamp: 'jcs 4/10/2024 15:37:10'!
 test04CanNotRemoveAnInvalidCustomer
 	
 	| customerBook johnLennon |
@@ -122,7 +108,7 @@ test04CanNotRemoveAnInvalidCustomer
 	johnLennon := 'John Lennon'.
 	customerBook addCustomerNamed: johnLennon.
 	
-	self closureThatShouldTriggerFailure: [ customerBook removeCustomerNamed: 'Paul McCartney' ]
+	self assertErrorTriggeredOnClosure: [ customerBook removeCustomerNamed: 'Paul McCartney' ]
 		errorToCatch: NotFound
 		closureToRunAfterFailure: [ :anError | 
 			self assert: customerBook numberOfCustomers = 1.
@@ -172,7 +158,7 @@ test06RemovingASuspendedCustomerShouldRemoveItFromCustomerBook
 	
 ! !
 
-!CustomerBookTest methodsFor: 'testing' stamp: 'jcs 4/9/2024 17:03:37'!
+!CustomerBookTest methodsFor: 'testing' stamp: 'jcs 4/10/2024 15:37:10'!
 test07CanNotSuspendAnInvalidCustomer
 	
 	| customerBook johnLennon |
@@ -181,12 +167,12 @@ test07CanNotSuspendAnInvalidCustomer
 	johnLennon := 'John Lennon'.
 	customerBook addCustomerNamed: johnLennon.
 	
-	self closureThatShouldTriggerFailure: [ customerBook suspendCustomerNamed: 'George Harrison' ]
+	self assertErrorTriggeredOnClosure: [ customerBook suspendCustomerNamed: 'George Harrison' ]
 		errorToCatch: CantSuspend
 		closureToRunAfterFailure: [ :anError | 
 			self assertOnlyCustomerOn: customerBook isCustomer: johnLennon ]! !
 
-!CustomerBookTest methodsFor: 'testing' stamp: 'jcs 4/9/2024 17:03:47'!
+!CustomerBookTest methodsFor: 'testing' stamp: 'jcs 4/10/2024 15:37:10'!
 test08CanNotSuspendAnAlreadySuspendedCustomer
 	
 	| customerBook johnLennon |
@@ -196,7 +182,7 @@ test08CanNotSuspendAnAlreadySuspendedCustomer
 	customerBook addCustomerNamed: johnLennon.
 	customerBook suspendCustomerNamed: johnLennon.
 	
-	self closureThatShouldTriggerFailure: [ customerBook suspendCustomerNamed: johnLennon ]
+	self assertErrorTriggeredOnClosure: [ customerBook suspendCustomerNamed: johnLennon ]
 		errorToCatch: CantSuspend
 		closureToRunAfterFailure: [ :anError | 
 			self assertOnlyCustomerOn: customerBook isCustomer: johnLennon ]! !
@@ -214,10 +200,10 @@ includesCustomerNamed: aName
 
 	^(active includes: aName) or: [ suspended includes: aName ]! !
 
-!CustomerBook methodsFor: 'testing' stamp: 'NR 4/3/2019 10:14:26'!
+!CustomerBook methodsFor: 'testing' stamp: 'jcs 4/10/2024 15:34:37'!
 isEmpty
 	
-	^active isEmpty and: [ suspended isEmpty ]! !
+	^self numberOfCustomers isZero ! !
 
 
 !CustomerBook methodsFor: 'initialization' stamp: 'NR 9/17/2020 07:23:04'!
