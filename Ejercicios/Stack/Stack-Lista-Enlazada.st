@@ -9,70 +9,70 @@ TestCase subclass: #OOStackTest
 test01StackShouldBeEmptyWhenCreated
 
 	| stack |
-	
+
 	stack := OOStack new.
-	
+
 	self assert: stack isEmpty! !
 
 !OOStackTest methodsFor: 'test' stamp: 'NR 5/13/2020 13:29:55'!
 test02PushAddElementsToTheStack
 
 	| stack |
-	
+
 	stack := OOStack new.
 	stack push: 'something'.
-	
+
 	self deny: stack isEmpty! !
 
 !OOStackTest methodsFor: 'test' stamp: 'NR 5/13/2020 13:30:01'!
 test03PopRemovesElementsFromTheStack
 
 	| stack |
-	
+
 	stack := OOStack new.
 	stack push: 'something'.
 	stack pop.
-	
+
 	self assert: stack isEmpty! !
 
 !OOStackTest methodsFor: 'test' stamp: 'NR 5/13/2020 13:30:09'!
 test04PopReturnsLastPushedObject
 
 	| stack pushedObject |
-	
+
 	stack := OOStack new.
 	pushedObject := 'something'.
 	stack push: pushedObject.
-	
+
 	self assert: stack pop = pushedObject! !
 
 !OOStackTest methodsFor: 'test' stamp: 'NR 9/16/2021 17:40:17'!
 test05StackBehavesLIFO
 
 	| stack firstPushedObject secondPushedObject |
-	
+
 	stack := OOStack new.
 	firstPushedObject := 'firstSomething'.
 	secondPushedObject := 'secondSomething'.
-	
+
 	stack push: firstPushedObject.
 	stack push: secondPushedObject.
-	
+
 	self assert: stack pop = secondPushedObject.
 	self assert: stack pop = firstPushedObject.
-	self assert: stack isEmpty 
+	self assert: stack isEmpty
 	! !
 
 !OOStackTest methodsFor: 'test' stamp: 'NR 5/13/2020 13:30:20'!
 test06TopReturnsLastPushedObject
 
 	| stack pushedObject |
-	
+
 	stack := OOStack new.
 	pushedObject := 'something'.
-	
+
 	stack push: pushedObject.
-	
+
 	self assert: stack top = pushedObject.
 	! !
 
@@ -80,12 +80,12 @@ test06TopReturnsLastPushedObject
 test07TopDoesNotRemoveObjectFromStack
 
 	| stack pushedObject |
-	
+
 	stack := OOStack new.
 	pushedObject := 'something'.
-	
+
 	stack push: pushedObject.
-	
+
 	self assert: stack size = 1.
 	stack top.
 	self assert: stack size = 1.
@@ -95,48 +95,48 @@ test07TopDoesNotRemoveObjectFromStack
 test08CanNotPopWhenThereAreNoObjectsInTheStack
 
 	| stack  |
-	
+
 	stack := OOStack new.
 	self
 		should: [ stack pop ]
-		raise: Error - MessageNotUnderstood 
+		raise: Error - MessageNotUnderstood
 		withExceptionDo: [ :anError |
 			self assert: anError messageText = OOStack stackEmptyErrorDescription ]
-		
+
 ! !
 
 !OOStackTest methodsFor: 'test' stamp: 'NR 5/13/2020 13:30:31'!
 test09CanNotPopWhenThereAreNoObjectsInTheStackAndTheStackHadObjects
 
 	| stack  |
-	
+
 	stack := OOStack new.
 	stack push: 'something'.
 	stack pop.
-	
+
 	self
 		should: [ stack pop ]
-		raise: Error - MessageNotUnderstood 
+		raise: Error - MessageNotUnderstood
 		withExceptionDo: [ :anError |
 			self assert: anError messageText = OOStack stackEmptyErrorDescription ]
-		
+
 ! !
 
 !OOStackTest methodsFor: 'test' stamp: 'HAW 4/14/2017 22:48:44'!
 test10CanNotTopWhenThereAreNoObjectsInTheStack
 
 	| stack  |
-	
+
 	stack := OOStack new.
 	self
 		should: [ stack top ]
-		raise: Error - MessageNotUnderstood 
+		raise: Error - MessageNotUnderstood
 		withExceptionDo: [ :anError |
 			self assert: anError messageText = OOStack stackEmptyErrorDescription ]
-		
+
 ! !
 
-
+
 !classDefinition: #SentenceFinderByPrefixTest category: #'Stack-Exercise'!
 TestCase subclass: #SentenceFinderByPrefixTest
 	instanceVariableNames: ''
@@ -144,7 +144,7 @@ TestCase subclass: #SentenceFinderByPrefixTest
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
 
-
+
 !classDefinition: #OOStack category: #'Stack-Exercise'!
 Object subclass: #OOStack
 	instanceVariableNames: 'currentTop'
@@ -154,14 +154,14 @@ Object subclass: #OOStack
 
 !OOStack methodsFor: 'accesing' stamp: 'jcs 4/19/2024 11:52:16'!
 isEmpty
-	
+
 	^currentTop isEmpty! !
 
 !OOStack methodsFor: 'accesing' stamp: 'jcs 4/19/2024 12:41:30'!
 pop
-	
+
 	| currentTopElement |
-	
+
 	currentTopElement := currentTop top.
 	currentTop := currentTop getPreviouslyStackedElement.
 	^currentTopElement.
@@ -169,7 +169,7 @@ pop
 
 !OOStack methodsFor: 'accesing' stamp: 'jcs 4/19/2024 12:39:19'!
 push: anElement
-		
+
 	currentTop := StackedElement basicNew initializeWith: anElement withPreviousElement: currentTop
 	! !
 
@@ -186,7 +186,7 @@ top
 
 !OOStack methodsFor: 'initialization' stamp: 'jcs 4/19/2024 11:39:47'!
 initialize
-	
+
 	currentTop := StackBase basicNew ! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
@@ -197,33 +197,33 @@ OOStack class
 
 !OOStack class methodsFor: 'error descriptions' stamp: 'jcs 4/18/2024 21:20:40'!
 stackEmptyErrorDescription
-	
+
 	^ 'recursar algo 2'! !
 
-
+
 !classDefinition: #StackBase category: #'Stack-Exercise'!
 OOStack subclass: #StackBase
-	instanceVariableNames: 'nextElement'
+	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Stack-Exercise'!
 
 !StackBase methodsFor: 'accesing' stamp: 'jcs 4/19/2024 11:43:22'!
 isEmpty
-	
+
 	^true! !
 
 !StackBase methodsFor: 'accesing' stamp: 'jcs 4/19/2024 11:43:35'!
 size
-	
+
 	^0! !
 
 !StackBase methodsFor: 'accesing' stamp: 'jcs 4/19/2024 11:42:56'!
 top
-	
+
 	self error: self class stackEmptyErrorDescription! !
 
-
+
 !classDefinition: #StackedElement category: #'Stack-Exercise'!
 OOStack subclass: #StackedElement
 	instanceVariableNames: 'previousElement containedElement parentClassInstance'
@@ -238,12 +238,12 @@ isEmpty
 
 !StackedElement methodsFor: 'accesing' stamp: 'jcs 4/19/2024 11:50:00'!
 size
-	
+
 	^1 + previousElement size! !
 
 !StackedElement methodsFor: 'accesing' stamp: 'jcs 4/19/2024 12:19:33'!
 top
-	
+
 	^containedElement! !
 
 
@@ -255,12 +255,12 @@ getPreviouslyStackedElement
 
 !StackedElement methodsFor: 'initialization' stamp: 'jcs 4/19/2024 11:49:27'!
 initializeWith: anElement withPreviousElement: previousStackedElement
-	
+
 	containedElement := anElement.
 	previousElement := previousStackedElement.
 ! !
 
-
+
 !classDefinition: #SentenceFinderByPrefix category: #'Stack-Exercise'!
 Object subclass: #SentenceFinderByPrefix
 	instanceVariableNames: ''
