@@ -1,3 +1,47 @@
+!classDefinition: #PortfolioTest category: #'Portfolio-Ejercicio'!
+TestCase subclass: #PortfolioTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Portfolio-Ejercicio'!
+
+!PortfolioTest methodsFor: 'tests' stamp: 'NC 5/14/2024 19:18:19'!
+test01ReceptiveAccountAddedToPortfolioSuccesfully
+
+	| portfolio receptiveAccount1|
+	portfolio := Portfolio new.
+	receptiveAccount1 := ReceptiveAccount new.
+
+	portfolio addAccount: receptiveAccount1.
+	
+	self assert: (portfolio accountHasBeenAdded: receptiveAccount1)! !
+
+!PortfolioTest methodsFor: 'tests' stamp: 'NC 5/14/2024 19:18:29'!
+test02PortfolioAddedToPortfolioSuccesfully
+
+	| mainPortfolio aPortfolio|
+	mainPortfolio := Portfolio new.
+	aPortfolio := Portfolio new.
+
+	mainPortfolio addPortfolio: aPortfolio.
+	
+	self assert: (mainPortfolio portfolioHasBeenAdded: aPortfolio)! !
+
+!PortfolioTest methodsFor: 'tests' stamp: 'NC 5/14/2024 19:27:50'!
+test03ReceptiveAccountAddedToPortfolioRecievedATransaction
+
+	| portfolio receptiveAccount depositTransaction|
+	portfolio := Portfolio new.
+	receptiveAccount := ReceptiveAccount new.
+
+	portfolio addAccount: receptiveAccount.
+	
+	depositTransaction := Deposit register: 100 on: receptiveAccount.
+	
+	"falla porque deberia dar true, pero usando detect devuelve la posicion de la cuenta que registro el deposito en las cuentas del portfolio"
+	self assert: (portfolio hasRegistered: depositTransaction)! !
+
+
 !classDefinition: #ReceptiveAccountTest category: #'Portfolio-Ejercicio'!
 TestCase subclass: #ReceptiveAccountTest
 	instanceVariableNames: ''
@@ -176,6 +220,46 @@ Withdraw class
 for: aValue
 
 	^ self new initializeFor: aValue ! !
+
+
+!classDefinition: #Portfolio category: #'Portfolio-Ejercicio'!
+Object subclass: #Portfolio
+	instanceVariableNames: 'accounts portfolios'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Portfolio-Ejercicio'!
+
+!Portfolio methodsFor: 'testing' stamp: 'NC 5/14/2024 19:09:54'!
+accountHasBeenAdded: aReceptiveAccount 
+	^accounts includes: aReceptiveAccount! !
+
+!Portfolio methodsFor: 'testing' stamp: 'NC 5/14/2024 19:10:14'!
+portfolioHasBeenAdded: aPortfolio
+	^portfolios includes: aPortfolio! !
+
+
+!Portfolio methodsFor: 'initialization' stamp: 'NC 5/14/2024 19:05:04'!
+initialize
+
+	accounts := Set new.
+	portfolios := Set new.! !
+
+
+!Portfolio methodsFor: 'portfolios' stamp: 'NC 5/14/2024 19:04:54'!
+addPortfolio: aPortfolio
+
+	portfolios add: aPortfolio! !
+
+
+!Portfolio methodsFor: 'accounts' stamp: 'NC 5/14/2024 18:49:15'!
+addAccount: anAccount
+
+	accounts add: anAccount! !
+
+!Portfolio methodsFor: 'accounts' stamp: 'NC 5/14/2024 19:26:44'!
+hasRegistered: aTransaction 
+	"aca nose si usar detect, pero lo que querriamos es ver si alguna cuenta registro la transaccion"
+	accounts detect: [:anAccount | anAccount hasRegistered: aTransaction] ifNone: [^false]! !
 
 
 !classDefinition: #ReceptiveAccount category: #'Portfolio-Ejercicio'!
