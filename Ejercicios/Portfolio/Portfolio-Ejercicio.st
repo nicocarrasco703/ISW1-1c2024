@@ -41,6 +41,23 @@ test03ReceptiveAccountAddedToPortfolioRecievedATransaction
 	"falla porque deberia dar true, pero usando detect devuelve la posicion de la cuenta que registro el deposito en las cuentas del portfolio"
 	self assert: (portfolio hasRegistered: depositTransaction)! !
 
+!PortfolioTest methodsFor: 'tests' stamp: 'jcs 5/15/2024 18:49:26'!
+test04TransactionsMadeWithReceptiveAccountRegisteredInPortfolio
+
+	| portfolio receptiveAccount_A receptiveAccount_B depositTransaction withdrawlTransaction transactions|
+	portfolio := Portfolio new.
+	receptiveAccount_A := ReceptiveAccount new.
+	receptiveAccount_B := ReceptiveAccount new.
+
+	portfolio addAccount: receptiveAccount_A.
+	portfolio addAccount: receptiveAccount_B.
+	
+	depositTransaction := Deposit register: 100 on: receptiveAccount_A.
+	withdrawlTransaction := Withdraw register: 50 on: receptiveAccount_B.
+	transactions := Bag with: depositTransaction with: withdrawlTransaction.
+	
+	self assert: (portfolio transactions) equals: transactions ! !
+
 
 !classDefinition: #ReceptiveAccountTest category: #'Portfolio-Ejercicio'!
 TestCase subclass: #ReceptiveAccountTest
@@ -256,10 +273,19 @@ addAccount: anAccount
 
 	accounts add: anAccount! !
 
-!Portfolio methodsFor: 'accounts' stamp: 'NC 5/14/2024 19:26:44'!
+!Portfolio methodsFor: 'accounts' stamp: 'jcs 5/15/2024 18:41:58'!
 hasRegistered: aTransaction 
 	"aca nose si usar detect, pero lo que querriamos es ver si alguna cuenta registro la transaccion"
-	accounts detect: [:anAccount | anAccount hasRegistered: aTransaction] ifNone: [^false]! !
+	^(accounts count: [:anAccount | anAccount hasRegistered: aTransaction]) > 0! !
+
+!Portfolio methodsFor: 'accounts' stamp: 'jcs 5/15/2024 18:58:16'!
+transactions
+	
+	| allTransactions |
+	
+	allTransactions := Bag new.
+	accounts do: [:anAccount | allTransactions addAll: (anAccount transactions)].
+	^allTransactions ! !
 
 
 !classDefinition: #ReceptiveAccount category: #'Portfolio-Ejercicio'!
