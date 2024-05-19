@@ -5,58 +5,149 @@ TestCase subclass: #PortfolioTest
 	poolDictionaries: ''
 	category: 'Portfolio-Ejercicio'!
 
-!PortfolioTest methodsFor: 'tests' stamp: 'NC 5/14/2024 19:18:19'!
-test01ReceptiveAccountAddedToPortfolioSuccesfully
-
-	| portfolio receptiveAccount1|
-	portfolio := Portfolio new.
-	receptiveAccount1 := ReceptiveAccount new.
-
-	portfolio addAccount: receptiveAccount1.
+!PortfolioTest methodsFor: 'testing' stamp: 'jcs 5/19/2024 15:35:19'!
+test01AddPortfolioToPortfolio
 	
-	self assert: (portfolio accountHasBeenAdded: receptiveAccount1)! !
-
-!PortfolioTest methodsFor: 'tests' stamp: 'NC 5/14/2024 19:18:29'!
-test02PortfolioAddedToPortfolioSuccesfully
-
-	| mainPortfolio aPortfolio|
-	mainPortfolio := Portfolio new.
+	| aPortfolio anotherPortfolio |
+	
 	aPortfolio := Portfolio new.
-
-	mainPortfolio addPortfolio: aPortfolio.
+	anotherPortfolio := Portfolio new.
 	
-	self assert: (mainPortfolio portfolioHasBeenAdded: aPortfolio)! !
+	aPortfolio addPortfolio: anotherPortfolio.! !
 
-!PortfolioTest methodsFor: 'tests' stamp: 'NC 5/14/2024 19:27:50'!
-test03ReceptiveAccountAddedToPortfolioRecievedATransaction
-
-	| portfolio receptiveAccount depositTransaction|
-	portfolio := Portfolio new.
-	receptiveAccount := ReceptiveAccount new.
-
-	portfolio addAccount: receptiveAccount.
+!PortfolioTest methodsFor: 'testing' stamp: 'jcs 5/19/2024 16:28:16'!
+test02CanNotAddAccountTwiceToPortfolio
 	
-	depositTransaction := Deposit register: 100 on: receptiveAccount.
+	| aPortfolio aReceptiveAccount |
 	
-	"falla porque deberia dar true, pero usando detect devuelve la posicion de la cuenta que registro el deposito en las cuentas del portfolio"
-	self assert: (portfolio hasRegistered: depositTransaction)! !
-
-!PortfolioTest methodsFor: 'tests' stamp: 'jcs 5/15/2024 18:49:26'!
-test04TransactionsMadeWithReceptiveAccountRegisteredInPortfolio
-
-	| portfolio receptiveAccount_A receptiveAccount_B depositTransaction withdrawlTransaction transactions|
-	portfolio := Portfolio new.
-	receptiveAccount_A := ReceptiveAccount new.
-	receptiveAccount_B := ReceptiveAccount new.
-
-	portfolio addAccount: receptiveAccount_A.
-	portfolio addAccount: receptiveAccount_B.
+	aPortfolio := Portfolio new.
+	aReceptiveAccount := ReceptiveAccount new.
 	
-	depositTransaction := Deposit register: 100 on: receptiveAccount_A.
-	withdrawlTransaction := Withdraw register: 50 on: receptiveAccount_B.
-	transactions := Bag with: depositTransaction with: withdrawlTransaction.
+	aPortfolio addAccount: aReceptiveAccount.
 	
-	self assert: (portfolio transactions) equals: transactions ! !
+	self shouldFail: [aPortfolio addAccount: aReceptiveAccount ]
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'jcs 5/19/2024 16:28:16'!
+test03CanNotAddTwoAccountsTwiceToPortfolio
+	
+	| aPortfolio aReceptiveAccount anotherReceptiveAccount |
+	
+	aPortfolio := Portfolio new.
+	aReceptiveAccount := ReceptiveAccount new.
+	anotherReceptiveAccount := ReceptiveAccount new.
+	
+	aPortfolio addAccount: aReceptiveAccount.
+	aPortfolio addAccount: anotherReceptiveAccount.
+	
+	self shouldFail: [aPortfolio addAccount: aReceptiveAccount ].
+	self shouldFail: [aPortfolio addAccount: anotherReceptiveAccount ].
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'jcs 5/19/2024 16:28:16'!
+test04CanNotAddAccountIncludedInNestedPortfolio
+	
+	| aPortfolio anotherPortfolio aReceptiveAccount |
+	
+	aPortfolio := Portfolio new.
+	anotherPortfolio := Portfolio new.
+	aReceptiveAccount := ReceptiveAccount new.
+	
+	anotherPortfolio addAccount: aReceptiveAccount.
+	aPortfolio addPortfolio: anotherPortfolio.
+	
+	self shouldFail: [aPortfolio addAccount: aReceptiveAccount ].
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'jcs 5/19/2024 16:28:16'!
+test05CanNotAddPortfolioIncludedInNestedPortfolio
+	
+	| aPortfolio anotherPortfolio aReceptiveAccount |
+	
+	aPortfolio := Portfolio new.
+	anotherPortfolio := Portfolio new.
+	aReceptiveAccount := ReceptiveAccount new.
+	
+	anotherPortfolio addAccount: aReceptiveAccount.
+	aPortfolio addPortfolio: anotherPortfolio.
+	
+	self shouldFail: [aPortfolio addPortfolio: anotherPortfolio ].
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'jcs 5/19/2024 16:28:16'!
+test06CanNotAddAccountIfParentContainsAccount
+	
+	| aPortfolio anotherPortfolio aReceptiveAccount |
+	
+	aPortfolio := Portfolio new.
+	anotherPortfolio := Portfolio new.
+	aReceptiveAccount := ReceptiveAccount new.
+	
+	aPortfolio addAccount: aReceptiveAccount.
+	aPortfolio addPortfolio: anotherPortfolio.
+	
+	self shouldFail: [anotherPortfolio addAccount: aReceptiveAccount ].
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'jcs 5/19/2024 16:28:16'!
+test07CanNotAddAccountIfOneOfMultipleParentsContainsAccount
+	
+	| childPortfolio parentPortfiolio1 parentPortfolio2 aReceptiveAccount |
+	
+	childPortfolio := Portfolio new.
+	parentPortfiolio1 := Portfolio new.
+	parentPortfolio2 := Portfolio new.
+	aReceptiveAccount := ReceptiveAccount new.
+	
+	parentPortfiolio1 addAccount: aReceptiveAccount.
+	parentPortfiolio1 addPortfolio: childPortfolio .
+	parentPortfolio2 addPortfolio: childPortfolio .
+	
+	self shouldFail: [childPortfolio addAccount: aReceptiveAccount ].
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'jcs 5/19/2024 16:55:20'!
+test08CanNotAddPortfolioWhenBothParentsShareAccount
+	
+	| childPortfolio parentPortfiolio1 parentPortfolio2 aReceptiveAccount |
+	
+	childPortfolio := Portfolio new.
+	parentPortfiolio1 := Portfolio new.
+	parentPortfolio2 := Portfolio new.
+	aReceptiveAccount := ReceptiveAccount new.
+	
+	parentPortfiolio1 addAccount: aReceptiveAccount.
+	parentPortfolio2 addAccount: aReceptiveAccount.
+	parentPortfiolio1 addPortfolio: childPortfolio.
+	
+	self shouldFail: [parentPortfolio2 addPortfolio: childPortfolio ].
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'jcs 5/19/2024 17:02:08'!
+test09BalanceOfSingleChildAccount
+	
+	| aPortfolio aReceptiveAccount |
+	
+	aPortfolio := Portfolio new.
+	aReceptiveAccount := ReceptiveAccount new.
+	
+	aPortfolio addAccount: aReceptiveAccount.
+	aReceptiveAccount register: (Deposit for: 50).
+		
+	self assert: (aPortfolio balance) equals: 50
+
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'jcs 5/19/2024 17:04:08'!
+test10BalanceOfEmptyPortfolio
+	
+	| aPortfolio |
+	
+	aPortfolio := Portfolio new.
+		
+	self assert: (aPortfolio balance) equals: 0
+
+! !
 
 
 !classDefinition: #ReceptiveAccountTest category: #'Portfolio-Ejercicio'!
@@ -66,7 +157,7 @@ TestCase subclass: #ReceptiveAccountTest
 	poolDictionaries: ''
 	category: 'Portfolio-Ejercicio'!
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'jcs 5/13/2024 21:25:05'!
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'NR 11/2/2020 17:13:44'!
 test01ReceptiveAccountHaveZeroAsBalanceWhenCreated 
 
 	| account |
@@ -87,8 +178,8 @@ test02DepositIncreasesBalanceOnTransactionValue
 	self assert: 100 equals: account balance.
 ! !
 
-!ReceptiveAccountTest methodsFor: 'tests' stamp: 'jcs 5/13/2024 21:32:19'!
-test03WithdrawDecreasesBalanceOnTransactionValue
+!ReceptiveAccountTest methodsFor: 'tests' stamp: 'NR 11/2/2020 17:13:52'!
+test03WithdrawDecreasesBalanceOnTransactionValue 
 
 	| account |
 	
@@ -157,6 +248,11 @@ Object subclass: #AccountTransaction
 	poolDictionaries: ''
 	category: 'Portfolio-Ejercicio'!
 
+!AccountTransaction methodsFor: 'value' stamp: 'jcs 5/18/2024 13:47:51'!
+effectOnAccountBalance
+
+	self subclassResponsibility ! !
+
 !AccountTransaction methodsFor: 'value' stamp: 'HernanWilkinson 9/12/2011 12:25'!
 value 
 
@@ -192,6 +288,11 @@ initializeFor: aValue
 	value := aValue ! !
 
 
+!Deposit methodsFor: 'value' stamp: 'jcs 5/18/2024 13:48:09'!
+effectOnAccountBalance
+
+	^value! !
+
 !Deposit methodsFor: 'value' stamp: 'HernanWilkinson 7/13/2011 18:38'!
 value
 
@@ -222,6 +323,11 @@ initializeFor: aValue
 	value := aValue ! !
 
 
+!Withdraw methodsFor: 'value' stamp: 'jcs 5/18/2024 13:48:25'!
+effectOnAccountBalance
+
+	^-1 * value! !
+
 !Withdraw methodsFor: 'value' stamp: 'HernanWilkinson 7/13/2011 18:33'!
 value
 
@@ -233,63 +339,149 @@ value
 Withdraw class
 	instanceVariableNames: ''!
 
-!Withdraw class methodsFor: 'instance creation' stamp: 'jcs 5/13/2024 21:21:21'!
+!Withdraw class methodsFor: 'instance creation' stamp: 'HernanWilkinson 7/13/2011 18:33'!
 for: aValue
 
 	^ self new initializeFor: aValue ! !
 
 
-!classDefinition: #Portfolio category: #'Portfolio-Ejercicio'!
-Object subclass: #Portfolio
-	instanceVariableNames: 'accounts portfolios'
+!classDefinition: #FinancialInstruments category: #'Portfolio-Ejercicio'!
+Object subclass: #FinancialInstruments
+	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Portfolio-Ejercicio'!
 
-!Portfolio methodsFor: 'testing' stamp: 'NC 5/14/2024 19:09:54'!
-accountHasBeenAdded: aReceptiveAccount 
-	^accounts includes: aReceptiveAccount! !
+!FinancialInstruments methodsFor: 'private' stamp: 'jcs 5/19/2024 16:50:53'!
+associatedAccountsOfChildren
 
-!Portfolio methodsFor: 'testing' stamp: 'NC 5/14/2024 19:10:14'!
-portfolioHasBeenAdded: aPortfolio
-	^portfolios includes: aPortfolio! !
+	self subclassResponsibility! !
 
 
-!Portfolio methodsFor: 'initialization' stamp: 'NC 5/14/2024 19:05:04'!
+!FinancialInstruments methodsFor: 'balance' stamp: 'jcs 5/19/2024 16:59:56'!
+balance
+
+	self subclassResponsibility! !
+
+
+!classDefinition: #Portfolio category: #'Portfolio-Ejercicio'!
+FinancialInstruments subclass: #Portfolio
+	instanceVariableNames: 'instruments parents'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Portfolio-Ejercicio'!
+
+!Portfolio methodsFor: 'initialization' stamp: 'jcs 5/19/2024 16:12:23'!
 initialize
 
-	accounts := Set new.
-	portfolios := Set new.! !
+	instruments := Set new.
+	parents := Set new.! !
 
 
-!Portfolio methodsFor: 'portfolios' stamp: 'NC 5/14/2024 19:04:54'!
+!Portfolio methodsFor: 'private' stamp: 'jcs 5/19/2024 16:12:37'!
+addPortfolioAsParent: aParentPortfolio
+
+	parents add: aParentPortfolio ! !
+
+!Portfolio methodsFor: 'private' stamp: 'jcs 5/19/2024 16:52:36'!
+assertAccountNotPresentInPortfolio: anAccount
+
+	| ownAccounts |
+	
+	ownAccounts := self associatedAccountsInWholeGraph.
+	
+	(ownAccounts includes: anAccount ) ifTrue: [self error: self class errorInstrumentAlreadyInPortfolio ]! !
+
+!Portfolio methodsFor: 'private' stamp: 'jcs 5/19/2024 16:52:36'!
+assertOwnAccountsDoNotIntersectWithPortfolio: anotherPortfolio
+
+	| ownAccounts instrumentAccounts |
+	
+	ownAccounts := self associatedAccountsInWholeGraph.
+	
+	instrumentAccounts  := anotherPortfolio associatedAccountsInWholeGraph.
+
+	((ownAccounts intersection: instrumentAccounts) notEmpty) ifTrue: [self error: self class errorInstrumentAlreadyInPortfolio ]! !
+
+!Portfolio methodsFor: 'private' stamp: 'jcs 5/19/2024 16:53:55'!
+associatedAccountsInWholeGraph
+
+	| associatedAccounts rootPortfolios |
+
+	associatedAccounts := Set new.
+	
+	rootPortfolios := self rootPortfolios.
+	
+	"run DFS from all nodes with an indegree of zero"
+	
+	rootPortfolios do: [:rootPortfolio | associatedAccounts := associatedAccounts union: (rootPortfolio associatedAccountsOfChildren)].
+	
+	^associatedAccounts! !
+
+!Portfolio methodsFor: 'private' stamp: 'jcs 5/19/2024 16:27:52'!
+associatedAccountsOfChildren
+
+	"DFS goes brrrrr"
+
+	| associatedAccounts |
+		
+	associatedAccounts := Set new.
+	
+	instruments do: [:anInstrument | associatedAccounts := associatedAccounts union: (anInstrument associatedAccountsOfChildren)].
+	
+	^associatedAccounts! !
+
+!Portfolio methodsFor: 'private' stamp: 'jcs 5/19/2024 16:24:21'!
+rootPortfolios
+
+	| rootPortfolios |
+	
+	rootPortfolios := Set new.
+	
+	(parents isEmpty)
+		ifTrue: [rootPortfolios add: self]
+		ifFalse: [
+			parents do: [:parentPortfolio | rootPortfolios := rootPortfolios union: (parentPortfolio rootPortfolios)]
+		].
+
+	^rootPortfolios 		
+	
+		! !
+
+
+!Portfolio methodsFor: 'instrument managment' stamp: 'jcs 5/19/2024 16:47:20'!
+addAccount: anInstrument
+
+	self assertAccountNotPresentInPortfolio: anInstrument.
+	instruments add: anInstrument ! !
+
+!Portfolio methodsFor: 'instrument managment' stamp: 'jcs 5/19/2024 16:48:57'!
 addPortfolio: aPortfolio
 
-	portfolios add: aPortfolio! !
+	self assertOwnAccountsDoNotIntersectWithPortfolio: aPortfolio.
+	instruments add: aPortfolio.
+	aPortfolio addPortfolioAsParent: self.! !
 
 
-!Portfolio methodsFor: 'accounts' stamp: 'NC 5/14/2024 18:49:15'!
-addAccount: anAccount
-
-	accounts add: anAccount! !
-
-!Portfolio methodsFor: 'accounts' stamp: 'jcs 5/15/2024 18:41:58'!
-hasRegistered: aTransaction 
-	"aca nose si usar detect, pero lo que querriamos es ver si alguna cuenta registro la transaccion"
-	^(accounts count: [:anAccount | anAccount hasRegistered: aTransaction]) > 0! !
-
-!Portfolio methodsFor: 'accounts' stamp: 'jcs 5/15/2024 18:58:16'!
-transactions
+!Portfolio methodsFor: 'balance' stamp: 'jcs 5/19/2024 17:04:18'!
+balance
 	
-	| allTransactions |
-	
-	allTransactions := Bag new.
-	accounts do: [:anAccount | allTransactions addAll: (anAccount transactions)].
-	^allTransactions ! !
+	^instruments sum: [:anInstrument | anInstrument balance] ifEmpty: [0]! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'Portfolio class' category: #'Portfolio-Ejercicio'!
+Portfolio class
+	instanceVariableNames: ''!
+
+!Portfolio class methodsFor: 'errors' stamp: 'jcs 5/18/2024 14:07:43'!
+errorInstrumentAlreadyInPortfolio
+
+	^'Instrument already present in portfolio'! !
 
 
 !classDefinition: #ReceptiveAccount category: #'Portfolio-Ejercicio'!
-Object subclass: #ReceptiveAccount
+FinancialInstruments subclass: #ReceptiveAccount
 	instanceVariableNames: 'transactions'
 	classVariableNames: ''
 	poolDictionaries: ''
@@ -313,17 +505,10 @@ transactions
 	^ transactions copy! !
 
 
-!ReceptiveAccount methodsFor: 'balance' stamp: 'jcs 5/13/2024 21:43:39'!
+!ReceptiveAccount methodsFor: 'balance' stamp: 'jcs 5/18/2024 13:48:47'!
 balance
 
-	| totalBalance |
-	
-	totalBalance := 0.
-	transactions do: [:aTransaction | 
-		(aTransaction isKindOf: Deposit) ifTrue: [totalBalance := totalBalance + aTransaction value].	
-		(aTransaction isKindOf: Withdraw ) ifTrue: [totalBalance := totalBalance - aTransaction value].		
-	].
-	^totalBalance ! !
+	^transactions sum: [ :aTransaction | aTransaction effectOnAccountBalance ] ifEmpty: [ 0 ]! !
 
 
 !ReceptiveAccount methodsFor: 'testing' stamp: 'NR 10/17/2019 03:28:43'!
@@ -331,3 +516,9 @@ hasRegistered: aTransaction
 
 	^ transactions includes: aTransaction 
 ! !
+
+
+!ReceptiveAccount methodsFor: 'private' stamp: 'jcs 5/19/2024 16:27:52'!
+associatedAccountsOfChildren
+
+	^Set with: self.! !
