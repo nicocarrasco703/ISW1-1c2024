@@ -149,6 +149,160 @@ test10BalanceOfEmptyPortfolio
 
 ! !
 
+!PortfolioTest methodsFor: 'testing' stamp: 'NC 5/19/2024 20:29:05'!
+test11TransactionsOfEmptyPortfolio
+	
+	| aPortfolio |
+	
+	aPortfolio := Portfolio new.
+		
+	self assert: (aPortfolio transactions) isEmpty
+
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'NC 5/20/2024 15:00:08'!
+test12TransactionsOfPortfolioWithOneAccount
+	
+	| portfolio aReceptiveAccount depositTransaction accountTransactions|
+	
+	portfolio := Portfolio new.
+	aReceptiveAccount := ReceptiveAccount new.
+
+	portfolio addAccount: aReceptiveAccount.
+	depositTransaction := Deposit register: 100 on: aReceptiveAccount.
+	accountTransactions := Bag with: depositTransaction.
+		
+	self assert: (portfolio transactions) equals: accountTransactions
+
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'NC 5/20/2024 15:03:05'!
+test13TransactionsOfPortfolioWithMoreThanOneAccount
+	
+	| portfolio aReceptiveAccount_A aReceptiveAccount_B withdrawlTransaction depositTransaction allAccountsTransactions|
+	
+	portfolio := Portfolio new.
+	aReceptiveAccount_A := ReceptiveAccount new.
+	aReceptiveAccount_B := ReceptiveAccount new.
+
+	portfolio addAccount: aReceptiveAccount_A.
+	portfolio addAccount: aReceptiveAccount_B.
+	
+	depositTransaction := Deposit register: 100 on: aReceptiveAccount_A.
+	withdrawlTransaction := Withdraw register: 50 on: aReceptiveAccount_B.
+	
+	allAccountsTransactions := Bag with: depositTransaction with: withdrawlTransaction.
+		
+	self assert: (portfolio transactions) equals: allAccountsTransactions
+
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'NC 5/20/2024 15:05:15'!
+test14TransactionsOfPortfolioWithAnAccountAndAnEmptyPortfolio
+	
+	| aPortfolio aReceptiveAccount aNestedPortfolio aWithdrawlTransaction depositTransaction allAccountsTransactions|
+	
+	aPortfolio := Portfolio new.
+	aReceptiveAccount := ReceptiveAccount new.
+	aNestedPortfolio := Portfolio new.
+
+	aPortfolio addAccount: aReceptiveAccount.
+	aPortfolio addPortfolio: aNestedPortfolio.
+	
+	depositTransaction := Deposit register: 100 on: aReceptiveAccount.
+	aWithdrawlTransaction := Withdraw register: 50 on: aReceptiveAccount.
+	
+	allAccountsTransactions := Bag with: depositTransaction with: aWithdrawlTransaction.
+		
+	self assert: (aPortfolio transactions) equals: allAccountsTransactions
+
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'NC 5/20/2024 15:07:36'!
+test15TransactionsOfPortfolioWithAnAccountAndANestedPortfolio
+	
+	| aPortfolio aReceptiveAccount_A aReceptiveAccount_B aNestedPortfolio withdrawlTransaction depositTransaction allAccountsTransactions|
+	
+	aPortfolio := Portfolio new.
+	aNestedPortfolio := Portfolio new.
+	aReceptiveAccount_A := ReceptiveAccount new.
+	aReceptiveAccount_B := ReceptiveAccount new.
+
+	aPortfolio addAccount: aReceptiveAccount_A.
+	aNestedPortfolio addAccount: aReceptiveAccount_B.
+	aPortfolio addPortfolio: aNestedPortfolio.
+	
+	depositTransaction := Deposit register: 100 on: aReceptiveAccount_A.
+	withdrawlTransaction := Withdraw register: 50 on: aReceptiveAccount_B.
+	
+	allAccountsTransactions := Bag with: depositTransaction with: withdrawlTransaction.
+		
+	self assert: (aPortfolio transactions) equals: allAccountsTransactions
+
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'NC 5/20/2024 15:13:31'!
+test16PortfolioWithOneAccountHasRegisteredATransaction
+
+	| portfolio receptiveAccount depositTransaction|
+	portfolio := Portfolio new.
+	receptiveAccount := ReceptiveAccount new.
+
+	portfolio addAccount: receptiveAccount.
+	
+	depositTransaction := Deposit register: 100 on: receptiveAccount.
+
+	self assert: (portfolio hasRegistered: depositTransaction)
+
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'NC 5/20/2024 15:18:38'!
+test17PortfolioWithMoreThanOneAccountHasRegisteredAllTransactions
+
+	| portfolio aReceptiveAccount_A aReceptiveAccount_B withdrawlTransaction depositTransaction|
+	
+	portfolio := Portfolio new.
+	aReceptiveAccount_A := ReceptiveAccount new.
+	aReceptiveAccount_B := ReceptiveAccount new.
+
+	portfolio addAccount: aReceptiveAccount_A.
+	portfolio addAccount: aReceptiveAccount_B.
+	
+	depositTransaction := Deposit register: 100 on: aReceptiveAccount_A.
+	withdrawlTransaction := Withdraw register: 50 on: aReceptiveAccount_B.
+
+	self assert: (portfolio hasRegistered: depositTransaction).
+	self assert: (portfolio hasRegistered: withdrawlTransaction)
+
+
+! !
+
+!PortfolioTest methodsFor: 'testing' stamp: 'NC 5/20/2024 15:16:59'!
+test18PortofolioWithAnAccountAndANestedPorfolioHasRegisteredAllTransactions
+	
+	| aPortfolio aReceptiveAccount_A aReceptiveAccount_B aNestedPortfolio withdrawlTransaction_1 withdrawlTransaction_2 depositTransaction|
+	
+	aPortfolio := Portfolio new.
+	aNestedPortfolio := Portfolio new.
+	aReceptiveAccount_A := ReceptiveAccount new.
+	aReceptiveAccount_B := ReceptiveAccount new.
+
+	aPortfolio addAccount: aReceptiveAccount_A.
+	aNestedPortfolio addAccount: aReceptiveAccount_B.
+	aPortfolio addPortfolio: aNestedPortfolio.
+	
+	depositTransaction := Deposit register: 100 on: aReceptiveAccount_A.
+	withdrawlTransaction_1 := Withdraw register: 50 on: aReceptiveAccount_B.
+	withdrawlTransaction_2 := Withdraw register: 50 on: aReceptiveAccount_A.
+		
+
+	self assert: (aPortfolio hasRegistered: depositTransaction).
+	self assert: (aPortfolio hasRegistered: withdrawlTransaction_1).
+	self assert: (aPortfolio hasRegistered: withdrawlTransaction_2).
+
+
+! !
+
 
 !classDefinition: #ReceptiveAccountTest category: #'Portfolio-Ejercicio'!
 TestCase subclass: #ReceptiveAccountTest
@@ -383,26 +537,6 @@ addPortfolioAsParent: aParentPortfolio
 
 	parents add: aParentPortfolio ! !
 
-!Portfolio methodsFor: 'private' stamp: 'jcs 5/19/2024 16:52:36'!
-assertAccountNotPresentInPortfolio: anAccount
-
-	| ownAccounts |
-	
-	ownAccounts := self associatedAccountsInWholeGraph.
-	
-	(ownAccounts includes: anAccount ) ifTrue: [self error: self class errorInstrumentAlreadyInPortfolio ]! !
-
-!Portfolio methodsFor: 'private' stamp: 'jcs 5/19/2024 16:52:36'!
-assertOwnAccountsDoNotIntersectWithPortfolio: anotherPortfolio
-
-	| ownAccounts instrumentAccounts |
-	
-	ownAccounts := self associatedAccountsInWholeGraph.
-	
-	instrumentAccounts  := anotherPortfolio associatedAccountsInWholeGraph.
-
-	((ownAccounts intersection: instrumentAccounts) notEmpty) ifTrue: [self error: self class errorInstrumentAlreadyInPortfolio ]! !
-
 !Portfolio methodsFor: 'private' stamp: 'jcs 5/19/2024 16:53:55'!
 associatedAccountsInWholeGraph
 
@@ -467,6 +601,44 @@ addPortfolio: aPortfolio
 balance
 	
 	^instruments sum: [:anInstrument | anInstrument balance] ifEmpty: [0]! !
+
+
+!Portfolio methodsFor: 'transactions' stamp: 'NC 5/20/2024 15:12:21'!
+hasRegistered: aTransaction 
+
+	^ self transactions includes: aTransaction! !
+
+!Portfolio methodsFor: 'transactions' stamp: 'NC 5/20/2024 14:54:02'!
+transactions
+
+	| allTransactions | 
+	
+	allTransactions := Bag new.
+	
+	instruments do: [:anInstrument | allTransactions addAll:(anInstrument transactions)].
+	
+	^ allTransactions ! !
+
+
+!Portfolio methodsFor: 'assertions' stamp: 'jcs 5/19/2024 16:52:36'!
+assertAccountNotPresentInPortfolio: anAccount
+
+	| ownAccounts |
+	
+	ownAccounts := self associatedAccountsInWholeGraph.
+	
+	(ownAccounts includes: anAccount ) ifTrue: [self error: self class errorInstrumentAlreadyInPortfolio ]! !
+
+!Portfolio methodsFor: 'assertions' stamp: 'jcs 5/19/2024 16:52:36'!
+assertOwnAccountsDoNotIntersectWithPortfolio: anotherPortfolio
+
+	| ownAccounts instrumentAccounts |
+	
+	ownAccounts := self associatedAccountsInWholeGraph.
+	
+	instrumentAccounts  := anotherPortfolio associatedAccountsInWholeGraph.
+
+	((ownAccounts intersection: instrumentAccounts) notEmpty) ifTrue: [self error: self class errorInstrumentAlreadyInPortfolio ]! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
