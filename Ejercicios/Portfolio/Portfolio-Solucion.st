@@ -716,12 +716,13 @@ value
 	^transfer value! !
 
 
-!TransferLeg methodsFor: 'as yet unclassified' stamp: 'jcs 5/23/2024 22:15:35'!
+!TransferLeg methodsFor: 'balance' stamp: 'jcs 5/23/2024 22:15:35'!
 affectBalance: aBalance
 
 	self subclassResponsibility! !
 
-!TransferLeg methodsFor: 'as yet unclassified' stamp: 'jcs 5/23/2024 22:12:30'!
+
+!TransferLeg methodsFor: 'initialization' stamp: 'jcs 5/23/2024 22:12:30'!
 initalizeAsPartOf: aTransfer
 
 	transfer := aTransfer ! !
@@ -732,7 +733,7 @@ initalizeAsPartOf: aTransfer
 TransferLeg class
 	instanceVariableNames: ''!
 
-!TransferLeg class methodsFor: 'as yet unclassified' stamp: 'jcs 5/23/2024 22:13:00'!
+!TransferLeg class methodsFor: 'instance creation' stamp: 'jcs 5/23/2024 22:13:00'!
 asPartOf: aTransfer
 
 	^self new initalizeAsPartOf: aTransfer! !
@@ -745,12 +746,13 @@ TransferLeg subclass: #DepositLeg
 	poolDictionaries: ''
 	category: 'Portfolio-Solucion'!
 
-!DepositLeg methodsFor: 'as yet unclassified' stamp: 'jcs 5/23/2024 21:59:19'!
+!DepositLeg methodsFor: 'balance' stamp: 'jcs 5/23/2024 21:59:19'!
 affectBalance: aBalance
 
 	^aBalance + (transfer value)! !
 
-!DepositLeg methodsFor: 'as yet unclassified' stamp: 'jcs 5/23/2024 22:14:08'!
+
+!DepositLeg methodsFor: 'legs' stamp: 'jcs 5/23/2024 22:14:08'!
 withdrawlLeg
 
 	^transfer withdrawalLeg ! !
@@ -763,12 +765,13 @@ TransferLeg subclass: #WithdrawlLeg
 	poolDictionaries: ''
 	category: 'Portfolio-Solucion'!
 
-!WithdrawlLeg methodsFor: 'as yet unclassified' stamp: 'jcs 5/23/2024 21:59:06'!
+!WithdrawlLeg methodsFor: 'balance' stamp: 'jcs 5/23/2024 21:59:06'!
 affectBalance: aBalance
 
 	^aBalance - (transfer value)! !
 
-!WithdrawlLeg methodsFor: 'as yet unclassified' stamp: 'jcs 5/23/2024 22:13:54'!
+
+!WithdrawlLeg methodsFor: 'legs' stamp: 'jcs 5/23/2024 22:13:54'!
 depositLeg
 
 	^transfer depositLeg ! !
@@ -840,7 +843,7 @@ withdrawalLeg
 	^withdrawlLeg ! !
 
 
-!Transfer methodsFor: 'as yet unclassified' stamp: 'jcs 5/23/2024 22:01:34'!
+!Transfer methodsFor: 'value' stamp: 'jcs 5/23/2024 22:01:34'!
 value
 
 	^value! !
