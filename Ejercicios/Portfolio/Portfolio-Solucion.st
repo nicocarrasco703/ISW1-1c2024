@@ -368,6 +368,33 @@ test04ThereExistsOnlyOneInstanceOfValue
     
     self assert: ( (withdrawTransaction value) == (depositTransaction value) )! !
 
+!TransferLegTest methodsFor: 'tests' stamp: 'NC 5/24/2024 21:09:26'!
+test05TransferCannotBeNegative
+
+	| senderAccount recieverAccount |
+	
+	senderAccount := ReceptiveAccount new.
+	recieverAccount := ReceptiveAccount new.
+	
+	self 
+		should: [Transfer ammount:  -100 from: senderAccount to: recieverAccount ]
+		raise: Error - MessageNotUnderstood
+		withMessageText: Transfer canNotTransferANegativeAmmountErrorDescription.
+	! !
+
+!TransferLegTest methodsFor: 'tests' stamp: 'NC 5/24/2024 21:20:57'!
+test06SenderAndRecieverCannotBeEqual
+
+	| anAccount |
+	
+	anAccount := ReceptiveAccount new.
+	
+	self 
+		should: [Transfer ammount: 100 from: anAccount to: anAccount]
+		raise: Error - MessageNotUnderstood
+		withMessageText: Transfer canNotTransferToSameAccountErrorDescription.
+	! !
+
 
 !classDefinition: #Account category: #'Portfolio-Solucion'!
 Object subclass: #Account
@@ -824,7 +851,34 @@ value
 Transfer class
 	instanceVariableNames: ''!
 
-!Transfer class methodsFor: 'instance creation' stamp: 'jcs 5/23/2024 21:14:25'!
+!Transfer class methodsFor: 'instance creation' stamp: 'NC 5/24/2024 21:22:03'!
 ammount: aMonetaryAmmount from: aSenderAccount to: aRecieverAccount 
 
+	self assertMonetaryValueIsValid: aMonetaryAmmount.
+	
+	self assertAccountsAreNotTheSameSender: aSenderAccount AndReciever: aRecieverAccount. 
+
+
 	^self new initializeAmmount: aMonetaryAmmount from: aSenderAccount to: aRecieverAccount ! !
+
+
+!Transfer class methodsFor: 'assertions' stamp: 'NC 5/24/2024 21:21:31'!
+assertAccountsAreNotTheSameSender: aSenderAccount AndReciever: aRecieverAccount 
+
+	aSenderAccount = aRecieverAccount ifTrue: [self error: self canNotTransferToSameAccountErrorDescription ]! !
+
+!Transfer class methodsFor: 'assertions' stamp: 'NC 5/24/2024 21:19:40'!
+assertMonetaryValueIsValid: anAmmountOfMoney
+
+	anAmmountOfMoney strictlyPositive ifFalse: [self error: self canNotTransferANegativeAmmountErrorDescription ]! !
+
+
+!Transfer class methodsFor: 'error descriptions' stamp: 'NC 5/24/2024 21:16:18'!
+canNotTransferANegativeAmmountErrorDescription
+	
+	^'Transfer ammount must be a non negative value'! !
+
+!Transfer class methodsFor: 'error descriptions' stamp: 'NC 5/24/2024 21:21:41'!
+canNotTransferToSameAccountErrorDescription
+
+	^'Can not transfer to same account'! !
