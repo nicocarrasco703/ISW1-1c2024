@@ -352,18 +352,18 @@ test03AccountWithAWithdrawPrintsSummaryCorrectly
 	Balance = -100
 	'! !
 
-!SummaryTest methodsFor: 'tests' stamp: 'NC 5/25/2024 19:12:25'!
+!SummaryTest methodsFor: 'tests' stamp: 'jcs 5/25/2024 19:21:02'!
 test04AccountsWithATransferPrintsSummaryCorrectly
 
-	| anAccount1 anAccount2 aSummaryForAccount1 aSummaryForAccount2 |
+	| senderAccount receiverAccount aSummaryForAccount1 aSummaryForAccount2 |
 	
-	anAccount1 := ReceptiveAccount new.
-	anAccount2 := ReceptiveAccount new.
+	senderAccount := ReceptiveAccount new.
+	receiverAccount := ReceptiveAccount new.
 	
-	Transfer ammount: 100 from: anAccount1 to: anAccount2.
+	Transfer ammount: 100 from: senderAccount to: receiverAccount.
 	
-	aSummaryForAccount1 := Summary for: anAccount1.
-	aSummaryForAccount2 := Summary for: anAccount2.
+	aSummaryForAccount1 := Summary for: senderAccount.
+	aSummaryForAccount2 := Summary for: receiverAccount.
 	
 	self assert: (aSummaryForAccount1 generateAccountSummary) equals: 'Salida por transferencia de 100.
 	Balance = -100
@@ -371,6 +371,61 @@ test04AccountsWithATransferPrintsSummaryCorrectly
 	self assert: (aSummaryForAccount2 generateAccountSummary) equals: 'Entrada por transferencia de 100.
 	Balance = 100
 	'! !
+
+!SummaryTest methodsFor: 'tests' stamp: 'jcs 5/25/2024 19:26:34'!
+test05SummaryForAccountWithEveryKindOfTransaction
+
+	| senderAccount receiverAccount aSummaryForAccount |
+	
+	senderAccount := ReceptiveAccount new.
+	receiverAccount := ReceptiveAccount new.
+	
+	Transfer ammount: 100 from: senderAccount to: receiverAccount.
+	Transfer ammount: 100 from: receiverAccount to: senderAccount.
+	Deposit register: 100 on: senderAccount.
+	Withdraw register: 100 on: senderAccount.
+	
+	aSummaryForAccount := Summary for: senderAccount.
+	
+	self assert: (aSummaryForAccount generateAccountSummary) equals: 'Salida por transferencia de 100.
+	Entrada por transferencia de 100.
+	Depósito por 100.
+	Extracción por 100.
+	Balance = 0
+	'.
+! !
+
+!SummaryTest methodsFor: 'tests' stamp: 'jcs 5/25/2024 19:48:17'!
+test06SummaryForAccountsInPortfolio
+
+	| senderAccount receiverAccount portfolioSummary aPortfolio |
+	
+	aPortfolio := Portfolio new.
+	senderAccount := ReceptiveAccount new.
+	receiverAccount := ReceptiveAccount new.
+	aPortfolio add: senderAccount.
+	aPortfolio add: receiverAccount.
+
+	
+	Transfer ammount: 100 from: senderAccount to: receiverAccount.
+	Transfer ammount: 100 from: receiverAccount to: senderAccount.
+	Deposit register: 100 on: senderAccount.
+	Withdraw register: 100 on: senderAccount.
+	
+	portfolioSummary := Summary for: aPortfolio.
+	
+	"TODO: posiblemente retornar conjunto de summaries"
+	
+	self assert: (portfolioSummary generateAccountSummary) equals: 'Salida por transferencia de 100.
+	Entrada por transferencia de 100.
+	Depósito por 100.
+	Extracción por 100.
+	Balance = 0
+	Entrada por transferencia de 100.
+	Salida por transferencia de 100.
+	Balance = 0
+	'.
+! !
 
 
 !classDefinition: #TransferLegTest category: #'Portfolio-Solucion'!
@@ -621,6 +676,18 @@ assertCanAdd: accountToAdd
 signalCanNotAddAccount
 	
 	self error: self class canNotAddAccountErrorMessage! !
+
+
+!Portfolio methodsFor: 'summary' stamp: 'jcs 5/25/2024 19:44:59'!
+printAccountSummary
+	
+	| summariesForAllAccounts | 
+	
+	summariesForAllAccounts := OrderedCollection new.
+	
+	accounts do: [:anAccount | summariesForAllAccounts addAll: (anAccount printAccountSummary)].
+	
+	^summariesForAllAccounts! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
