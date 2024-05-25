@@ -305,6 +305,74 @@ test07AccountKnowsItsTransactions
 ! !
 
 
+!classDefinition: #SummaryTest category: #'Portfolio-Solucion'!
+TestCase subclass: #SummaryTest
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Portfolio-Solucion'!
+
+!SummaryTest methodsFor: 'tests' stamp: 'NC 5/25/2024 18:58:00'!
+test01EmptyAccountSummaryHasZeroBalance
+
+	| anAccount aSummary |
+	
+	anAccount := ReceptiveAccount new.
+	
+	aSummary := Summary for: anAccount.
+	
+	self assert: (aSummary generateAccountSummary) equals: 'Balance = 0
+	'! !
+
+!SummaryTest methodsFor: 'tests' stamp: 'NC 5/25/2024 18:57:43'!
+test02AccountWithADepositPrintsSummaryCorrectly
+
+	| anAccount aSummary |
+	
+	anAccount := ReceptiveAccount new.
+	Deposit register: 100 on: anAccount.
+	
+	aSummary := Summary for: anAccount.
+	
+	self assert: (aSummary generateAccountSummary) equals: 'Depósito por 100.
+	Balance = 100
+	'! !
+
+!SummaryTest methodsFor: 'tests' stamp: 'NC 5/25/2024 19:00:40'!
+test03AccountWithAWithdrawPrintsSummaryCorrectly
+
+	| anAccount aSummary |
+	
+	anAccount := ReceptiveAccount new.
+	Withdraw register: 100 on: anAccount.
+	
+	aSummary := Summary for: anAccount.
+	
+	self assert: (aSummary generateAccountSummary) equals: 'Extracción por 100.
+	Balance = -100
+	'! !
+
+!SummaryTest methodsFor: 'tests' stamp: 'NC 5/25/2024 19:12:25'!
+test04AccountsWithATransferPrintsSummaryCorrectly
+
+	| anAccount1 anAccount2 aSummaryForAccount1 aSummaryForAccount2 |
+	
+	anAccount1 := ReceptiveAccount new.
+	anAccount2 := ReceptiveAccount new.
+	
+	Transfer ammount: 100 from: anAccount1 to: anAccount2.
+	
+	aSummaryForAccount1 := Summary for: anAccount1.
+	aSummaryForAccount2 := Summary for: anAccount2.
+	
+	self assert: (aSummaryForAccount1 generateAccountSummary) equals: 'Salida por transferencia de 100.
+	Balance = -100
+	'.
+	self assert: (aSummaryForAccount2 generateAccountSummary) equals: 'Entrada por transferencia de 100.
+	Balance = 100
+	'! !
+
+
 !classDefinition: #TransferLegTest category: #'Portfolio-Solucion'!
 TestCase subclass: #TransferLegTest
 	instanceVariableNames: ''
@@ -435,6 +503,12 @@ transactions
 addedTo: aPortfolio
 
 	self subclassResponsibility ! !
+
+
+!Account methodsFor: 'summary' stamp: 'NC 5/25/2024 18:35:38'!
+printAccountSummary
+
+	self subclassResponsibility! !
 
 
 !classDefinition: #Portfolio category: #'Portfolio-Solucion'!
@@ -631,6 +705,21 @@ addedTo: aPortfolio
 	
 	! !
 
+
+!ReceptiveAccount methodsFor: 'summary' stamp: 'NC 5/25/2024 19:15:14'!
+printAccountSummary
+	
+	| accountSummary |
+	accountSummary  := OrderedCollection new.
+	
+	transactions do: [: aTransaction| (aTransaction isKindOf: Deposit) ifTrue: [accountSummary add: 'Depósito por ', (aTransaction value asString), '.']. 
+											(aTransaction isKindOf: Withdraw) ifTrue: [accountSummary add: 'Extracción por ', (aTransaction value asString), '.']. 
+											(aTransaction isKindOf: DepositLeg) ifTrue: [accountSummary add: 'Entrada por transferencia de ', (aTransaction value asString), '.']. 
+											(aTransaction isKindOf: WithdrawlLeg) ifTrue: [accountSummary add: 'Salida por transferencia de ', (aTransaction value asString), '.']. ].
+	accountSummary add: 'Balance = ', (self balance asString).
+	
+	^ accountSummary! !
+
 
 !classDefinition: #AccountTransaction category: #'Portfolio-Solucion'!
 Object subclass: #AccountTransaction
@@ -710,7 +799,7 @@ AccountTransaction subclass: #TransferLeg
 	poolDictionaries: ''
 	category: 'Portfolio-Solucion'!
 
-!TransferLeg methodsFor: 'private - testing' stamp: 'jcs 5/23/2024 22:18:06'!
+!TransferLeg methodsFor: 'value' stamp: 'jcs 5/23/2024 22:18:06'!
 value
 
 	^transfer value! !
@@ -811,6 +900,43 @@ Withdraw class
 for: aValue
 
 	^ self new initializeFor: aValue ! !
+
+
+!classDefinition: #Summary category: #'Portfolio-Solucion'!
+Object subclass: #Summary
+	instanceVariableNames: 'account'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'Portfolio-Solucion'!
+
+!Summary methodsFor: 'initialization' stamp: 'NC 5/25/2024 17:58:32'!
+initializeFor: anAccount 
+	
+	account := anAccount.! !
+
+
+!Summary methodsFor: 'summary generation' stamp: 'NC 5/25/2024 18:56:38'!
+generateAccountSummary
+
+	| accountSummary carriageReturn summary |
+	accountSummary := 	account printAccountSummary.
+	summary := ''.
+	carriageReturn := '
+	'.
+	accountSummary do: [ :curStr | summary := summary,curStr,carriageReturn].
+
+	^ summary! !
+
+"-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
+
+!classDefinition: 'Summary class' category: #'Portfolio-Solucion'!
+Summary class
+	instanceVariableNames: ''!
+
+!Summary class methodsFor: 'instance creation' stamp: 'NC 5/25/2024 17:58:13'!
+for: anAccount 
+
+	^self new initializeFor: anAccount ! !
 
 
 !classDefinition: #Transfer category: #'Portfolio-Solucion'!
