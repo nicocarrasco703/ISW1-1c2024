@@ -560,8 +560,8 @@ addedTo: aPortfolio
 	self subclassResponsibility ! !
 
 
-!Account methodsFor: 'summary' stamp: 'NC 5/25/2024 18:35:38'!
-printAccountSummary
+!Account methodsFor: 'summary' stamp: 'NC 5/26/2024 12:47:07'!
+accountSummary
 
 	self subclassResponsibility! !
 
@@ -678,14 +678,14 @@ signalCanNotAddAccount
 	self error: self class canNotAddAccountErrorMessage! !
 
 
-!Portfolio methodsFor: 'summary' stamp: 'jcs 5/25/2024 19:44:59'!
-printAccountSummary
+!Portfolio methodsFor: 'summary' stamp: 'NC 5/26/2024 12:47:07'!
+accountSummary
 	
 	| summariesForAllAccounts | 
 	
 	summariesForAllAccounts := OrderedCollection new.
 	
-	accounts do: [:anAccount | summariesForAllAccounts addAll: (anAccount printAccountSummary)].
+	accounts do: [:anAccount | summariesForAllAccounts addAll: (anAccount accountSummary)].
 	
 	^summariesForAllAccounts! !
 
@@ -773,16 +773,13 @@ addedTo: aPortfolio
 	! !
 
 
-!ReceptiveAccount methodsFor: 'summary' stamp: 'NC 5/25/2024 19:15:14'!
-printAccountSummary
+!ReceptiveAccount methodsFor: 'summary' stamp: 'NC 5/26/2024 12:48:55'!
+accountSummary
 	
 	| accountSummary |
 	accountSummary  := OrderedCollection new.
 	
-	transactions do: [: aTransaction| (aTransaction isKindOf: Deposit) ifTrue: [accountSummary add: 'Depósito por ', (aTransaction value asString), '.']. 
-											(aTransaction isKindOf: Withdraw) ifTrue: [accountSummary add: 'Extracción por ', (aTransaction value asString), '.']. 
-											(aTransaction isKindOf: DepositLeg) ifTrue: [accountSummary add: 'Entrada por transferencia de ', (aTransaction value asString), '.']. 
-											(aTransaction isKindOf: WithdrawlLeg) ifTrue: [accountSummary add: 'Salida por transferencia de ', (aTransaction value asString), '.']. ].
+	transactions do: [: aTransaction| accountSummary add: (aTransaction lineForAccountSummary)].
 	accountSummary add: 'Balance = ', (self balance asString).
 	
 	^ accountSummary! !
@@ -805,6 +802,12 @@ value
 affectBalance: aBalance
 
 	self subclassResponsibility ! !
+
+
+!AccountTransaction methodsFor: 'summary' stamp: 'NC 5/26/2024 12:52:38'!
+lineForAccountSummary
+
+	self subclassResponsibility! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -846,6 +849,12 @@ value
 affectBalance: aBalance
 
 	^aBalance + value ! !
+
+
+!Deposit methodsFor: 'summary' stamp: 'NC 5/26/2024 12:51:40'!
+lineForAccountSummary
+	
+	^'Depósito por ', (value asString), '.'! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -913,6 +922,12 @@ withdrawlLeg
 
 	^transfer withdrawalLeg ! !
 
+
+!DepositLeg methodsFor: 'summary' stamp: 'NC 5/26/2024 12:56:25'!
+lineForAccountSummary
+	
+	^'Entrada por transferencia de ', (transfer value asString), '.'! !
+
 
 !classDefinition: #WithdrawlLeg category: #'Portfolio-Solucion'!
 TransferLeg subclass: #WithdrawlLeg
@@ -931,6 +946,12 @@ affectBalance: aBalance
 depositLeg
 
 	^transfer depositLeg ! !
+
+
+!WithdrawlLeg methodsFor: 'summary' stamp: 'NC 5/26/2024 12:56:48'!
+lineForAccountSummary
+	
+	^'Salida por transferencia de ', (transfer value asString), '.'! !
 
 
 !classDefinition: #Withdraw category: #'Portfolio-Solucion'!
@@ -957,6 +978,12 @@ affectBalance: aBalance
 
 	^aBalance - value! !
 
+
+!Withdraw methodsFor: 'summary' stamp: 'NC 5/26/2024 12:52:53'!
+lineForAccountSummary
+	
+	^'Extracción por ', (value asString), '.'! !
+
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
 !classDefinition: 'Withdraw class' category: #'Portfolio-Solucion'!
@@ -982,11 +1009,11 @@ initializeFor: anAccount
 	account := anAccount.! !
 
 
-!Summary methodsFor: 'summary generation' stamp: 'NC 5/25/2024 18:56:38'!
+!Summary methodsFor: 'summary generation' stamp: 'NC 5/26/2024 12:47:07'!
 generateAccountSummary
 
 	| accountSummary carriageReturn summary |
-	accountSummary := 	account printAccountSummary.
+	accountSummary := 	account accountSummary.
 	summary := ''.
 	carriageReturn := '
 	'.
