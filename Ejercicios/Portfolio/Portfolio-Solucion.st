@@ -548,6 +548,11 @@ addTransactionsTo: aCollectionOfTransactions
 
 	self subclassResponsibility ! !
 
+!Account methodsFor: 'transactions' stamp: 'jcs 5/27/2024 15:44:55'!
+operateOnTransactionsWith: objectThatWillOperateOnTransactions
+
+	self subclassResponsibility! !
+
 !Account methodsFor: 'transactions' stamp: 'HAW 5/25/2019 12:23:15'!
 transactions
 
@@ -559,11 +564,6 @@ addedTo: aPortfolio
 
 	self subclassResponsibility ! !
 
-
-!Account methodsFor: 'summary' stamp: 'NC 5/26/2024 12:47:07'!
-accountSummary
-
-	self subclassResponsibility! !
 
 
 !classDefinition: #Portfolio category: #'Portfolio-Solucion'!
@@ -678,16 +678,11 @@ signalCanNotAddAccount
 	self error: self class canNotAddAccountErrorMessage! !
 
 
-!Portfolio methodsFor: 'summary' stamp: 'NC 5/26/2024 12:47:07'!
-accountSummary
-	
-	| summariesForAllAccounts | 
-	
-	summariesForAllAccounts := OrderedCollection new.
-	
-	accounts do: [:anAccount | summariesForAllAccounts addAll: (anAccount accountSummary)].
-	
-	^summariesForAllAccounts! !
+
+!Portfolio methodsFor: 'as yet unclassified' stamp: 'jcs 5/27/2024 15:50:02'!
+operateOnTransactionsWith: objectThatWillOperateOnTransactions
+
+	accounts do: [:anAccount | anAccount operateOnTransactionsWith: objectThatWillOperateOnTransactions ]! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -735,6 +730,11 @@ addTransactionsTo: aCollectionOfTransactions
 
 	aCollectionOfTransactions addAll: transactions ! !
 
+!ReceptiveAccount methodsFor: 'transactions' stamp: 'jcs 5/27/2024 15:36:04'!
+operateOnTransactionsWith: objectThatWillOperateOnTransactions
+
+	transactions do: [:aTransaction | aTransaction performOperationWith: objectThatWillOperateOnTransactions ]! !
+
 !ReceptiveAccount methodsFor: 'transactions' stamp: 'HernanWilkinson 7/13/2011 18:37'!
 register: aTransaction
 
@@ -772,17 +772,6 @@ addedTo: aPortfolio
 	
 	! !
 
-
-!ReceptiveAccount methodsFor: 'summary' stamp: 'NC 5/26/2024 12:48:55'!
-accountSummary
-	
-	| accountSummary |
-	accountSummary  := OrderedCollection new.
-	
-	transactions do: [: aTransaction| accountSummary add: (aTransaction lineForAccountSummary)].
-	accountSummary add: 'Balance = ', (self balance asString).
-	
-	^ accountSummary! !
 
 
 !classDefinition: #AccountTransaction category: #'Portfolio-Solucion'!
@@ -851,10 +840,11 @@ affectBalance: aBalance
 	^aBalance + value ! !
 
 
-!Deposit methodsFor: 'summary' stamp: 'NC 5/26/2024 12:51:40'!
-lineForAccountSummary
-	
-	^'Depósito por ', (value asString), '.'! !
+
+!Deposit methodsFor: 'as yet unclassified' stamp: 'jcs 5/27/2024 15:36:46'!
+performOperationWith: objectThatWillOperateOnTransactions
+
+	objectThatWillOperateOnTransactions operateWithDeposit: self! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -923,10 +913,11 @@ withdrawlLeg
 	^transfer withdrawalLeg ! !
 
 
-!DepositLeg methodsFor: 'summary' stamp: 'NC 5/26/2024 12:56:25'!
-lineForAccountSummary
-	
-	^'Entrada por transferencia de ', (transfer value asString), '.'! !
+
+!DepositLeg methodsFor: 'as yet unclassified' stamp: 'jcs 5/27/2024 15:37:01'!
+performOperationWith: objectThatWillOperateOnTransactions
+
+	objectThatWillOperateOnTransactions operateWithDepositLeg: self! !
 
 
 !classDefinition: #WithdrawlLeg category: #'Portfolio-Solucion'!
@@ -948,10 +939,11 @@ depositLeg
 	^transfer depositLeg ! !
 
 
-!WithdrawlLeg methodsFor: 'summary' stamp: 'NC 5/26/2024 12:56:48'!
-lineForAccountSummary
-	
-	^'Salida por transferencia de ', (transfer value asString), '.'! !
+
+!WithdrawlLeg methodsFor: 'as yet unclassified' stamp: 'jcs 5/27/2024 15:37:17'!
+performOperationWith: objectThatWillOperateOnTransactions
+
+	objectThatWillOperateOnTransactions operateWithWithdrawlLeg: self! !
 
 
 !classDefinition: #Withdraw category: #'Portfolio-Solucion'!
@@ -979,10 +971,11 @@ affectBalance: aBalance
 	^aBalance - value! !
 
 
-!Withdraw methodsFor: 'summary' stamp: 'NC 5/26/2024 12:52:53'!
-lineForAccountSummary
-	
-	^'Extracción por ', (value asString), '.'! !
+
+!Withdraw methodsFor: 'as yet unclassified' stamp: 'jcs 5/27/2024 15:37:29'!
+performOperationWith: objectThatWillOperateOnTransactions
+
+	objectThatWillOperateOnTransactions operateWithWithdrawl: self! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -998,28 +991,51 @@ for: aValue
 
 !classDefinition: #Summary category: #'Portfolio-Solucion'!
 Object subclass: #Summary
-	instanceVariableNames: 'account'
+	instanceVariableNames: 'account generatedSummary'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'Portfolio-Solucion'!
 
-!Summary methodsFor: 'initialization' stamp: 'NC 5/25/2024 17:58:32'!
+!Summary methodsFor: 'initialization' stamp: 'jcs 5/27/2024 15:39:16'!
 initializeFor: anAccount 
 	
-	account := anAccount.! !
+	account := anAccount.
+	generatedSummary := OrderedCollection new.! !
 
 
-!Summary methodsFor: 'summary generation' stamp: 'NC 5/26/2024 12:47:07'!
+!Summary methodsFor: 'summary generation' stamp: 'jcs 5/27/2024 15:47:26'!
 generateAccountSummary
 
-	| accountSummary carriageReturn summary |
-	accountSummary := 	account accountSummary.
+	| carriageReturn summary |
+	account operateOnTransactionsWith: self.
+	generatedSummary add: 'Balance = ', (account balance asString).
 	summary := ''.
 	carriageReturn := '
 	'.
-	accountSummary do: [ :curStr | summary := summary,curStr,carriageReturn].
+	generatedSummary do: [ :curStr | summary := summary,curStr,carriageReturn].
 
 	^ summary! !
+
+
+!Summary methodsFor: 'as yet unclassified' stamp: 'jcs 5/27/2024 15:40:07'!
+operateWithDeposit: aDeposit
+
+	generatedSummary add: 'Depósito por ', (aDeposit value asString), '.'! !
+
+!Summary methodsFor: 'as yet unclassified' stamp: 'jcs 5/27/2024 15:41:30'!
+operateWithDepositLeg: aDepositLeg
+
+	generatedSummary add: 'Entrada por transferencia de ', (aDepositLeg value asString), '.'! !
+
+!Summary methodsFor: 'as yet unclassified' stamp: 'jcs 5/27/2024 15:42:57'!
+operateWithWithdrawl: aWithdrawl
+
+	generatedSummary add: 'Extracción por ', (aWithdrawl value asString), '.'! !
+
+!Summary methodsFor: 'as yet unclassified' stamp: 'jcs 5/27/2024 15:42:19'!
+operateWithWithdrawlLeg: aWithdrawlLeg
+
+	generatedSummary add: 'Salida por transferencia de ', (aWithdrawlLeg value asString), '.'! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -1067,6 +1083,7 @@ withdrawalLeg
 value
 
 	^value! !
+
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
