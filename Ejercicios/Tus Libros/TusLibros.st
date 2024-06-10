@@ -248,7 +248,7 @@ debit: anAmount from: aCreditCard
 
 !classDefinition: #TusLibrosRestInterfaceTest category: #TusLibros!
 TestCase subclass: #TusLibrosRestInterfaceTest
-	instanceVariableNames: 'testObjectsFactory authenticatorBehaviour currentDate'
+	instanceVariableNames: 'testObjectsFactory authenticatorBehaviour currentDate debitBehavior'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
@@ -481,15 +481,82 @@ test11AddingItemsResetsCartTimeToLive
 	self assert: (tusLibrosRestInterface listCart: cartId) equals: expectedCartContens 
 ! !
 
+!TusLibrosRestInterfaceTest methodsFor: 'tests' stamp: 'NC 6/10/2024 15:40:09'!
+test12CanNotCheckoutExpiredCart
 
-!TusLibrosRestInterfaceTest methodsFor: 'as yet unclassified' stamp: 'jcs 6/9/2024 19:43:09'!
+	| tusLibrosRestInterface cartId salesBook |
+	
+	salesBook := OrderedCollection new.
+	
+	tusLibrosRestInterface := TusLibrosRestInterface 
+								withCatalog: testObjectsFactory defaultCatalog
+								withPaymentProcessor: self
+								withTimekeeping: self
+								withAuthenticator: self.
+								
+	currentDate := DateAndTime year: 2018 month: 12 day: 9 hour: 8 minute: 0.
+	
+	cartId := tusLibrosRestInterface createCartForClientId: testObjectsFactory validClientId andPassword: testObjectsFactory validPassword.
+	tusLibrosRestInterface addToCart: cartId bookIsbn: testObjectsFactory itemSellByTheStore bookQuantity: 2.
+	
+	currentDate := DateAndTime year: 2018 month: 12 day: 9 hour: 8 minute: 31.
+
+	self
+		should: [	tusLibrosRestInterface checkoutCartWithID: cartId
+							payingWithCCN: testObjectsFactory validCreditCardNumber 
+							CCED: testObjectsFactory validCreditCardED 
+							CCO: testObjectsFactory validCreditCardOwner ]
+		raise: Error - MessageNotUnderstood 
+		withExceptionDo: [ :anError |
+			self assert: anError messageText = TusLibrosRestInterface errorInvalidCartId.
+			self assert: salesBook isEmpty ]
+
+! !
+
+!TusLibrosRestInterfaceTest methodsFor: 'tests' stamp: 'NC 6/10/2024 16:42:41'!
+test13CartIsDeletedAfterCheckout
+
+	| tusLibrosRestInterface cartId |
+	
+	tusLibrosRestInterface := TusLibrosRestInterface 
+								withCatalog: testObjectsFactory defaultCatalog
+								withPaymentProcessor: self
+								withTimekeeping: self
+								withAuthenticator: self.
+	
+	cartId := tusLibrosRestInterface createCartForClientId: testObjectsFactory validClientId andPassword: testObjectsFactory validPassword.
+	
+	tusLibrosRestInterface addToCart: cartId bookIsbn: testObjectsFactory itemSellByTheStore bookQuantity: 1.
+
+	tusLibrosRestInterface checkoutCartWithID: cartId
+							payingWithCCN: testObjectsFactory validCreditCardNumber 
+							CCED: testObjectsFactory validCreditCardED 
+							CCO: testObjectsFactory validCreditCardOwner.
+							
+	self
+		should: [tusLibrosRestInterface listCart: cartId]
+		raise: Error - MessageNotUnderstood 
+		withExceptionDo: [ :anError |
+			self assert: anError messageText = TusLibrosRestInterface errorInvalidCartId.
+			]
+
+! !
+
+
+!TusLibrosRestInterfaceTest methodsFor: 'setUp' stamp: 'NC 6/10/2024 11:57:16'!
 setUp 
 
 	testObjectsFactory := StoreTestObjectsFactory new.
 	authenticatorBehaviour := [:userId :password | 
 		((userId = testObjectsFactory validClientId) and: (password = testObjectsFactory validPassword))].
-	currentDate := DateAndTime now.! !
+	currentDate := DateAndTime now.
+	debitBehavior := [ :anAmount :aCreditCard | ]! !
 
+
+!TusLibrosRestInterfaceTest methodsFor: 'simulation messages' stamp: 'NC 6/10/2024 11:57:41'!
+debit: anAmount from: aCreditCard 
+
+	^debitBehavior value: anAmount value: aCreditCard ! !
 
 !TusLibrosRestInterfaceTest methodsFor: 'simulation messages' stamp: 'jcs 6/9/2024 16:02:43'!
 isRegisteredWithId: aClientId andPassword: aPassword
@@ -684,7 +751,7 @@ creditCardHasNoCreditErrorMessage
 
 !classDefinition: #CreditCard category: #TusLibros!
 Object subclass: #CreditCard
-	instanceVariableNames: 'expiration'
+	instanceVariableNames: 'expiration owner number'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
@@ -700,6 +767,13 @@ initializeExpiringOn: aMonth
 	
 	expiration := aMonth ! !
 
+!CreditCard methodsFor: 'initialization' stamp: 'NC 6/10/2024 11:53:46'!
+initializeExpiringOn: aMonth withNumber: aCCNumber withOwner: anOwnerName
+	
+	expiration := aMonth.
+	owner := anOwnerName.
+	number := aCCNumber ! !
+
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
 !classDefinition: 'CreditCard class' category: #TusLibros!
@@ -710,6 +784,11 @@ CreditCard class
 expiringOn: aMonth 
 	
 	^self new initializeExpiringOn: aMonth! !
+
+!CreditCard class methodsFor: 'instance creation' stamp: 'NC 6/10/2024 11:54:39'!
+expiringOn: aMonth withNumber: aCCNumber withOwner: anOwnerName
+	
+	^self new initializeExpiringOn: aMonth withNumber: aCCNumber withOwner: anOwnerName! !
 
 
 !classDefinition: #Sale category: #TusLibros!
@@ -800,6 +879,21 @@ notExpiredCreditCard
 	
 	^CreditCard expiringOn: (Month month: today monthIndex year: today yearNumber + 1)! !
 
+!StoreTestObjectsFactory methodsFor: 'credit card' stamp: 'NC 6/10/2024 16:20:27'!
+validCreditCardED
+	
+	^ Month month: today monthIndex year: today yearNumber + 1! !
+
+!StoreTestObjectsFactory methodsFor: 'credit card' stamp: 'NC 6/10/2024 12:32:10'!
+validCreditCardNumber
+	
+	^'0000 0000 0000 0000'! !
+
+!StoreTestObjectsFactory methodsFor: 'credit card' stamp: 'NC 6/10/2024 12:32:02'!
+validCreditCardOwner
+	
+	^'Leonel Braginski'! !
+
 
 !StoreTestObjectsFactory methodsFor: 'initialization' stamp: 'HernanWilkinson 6/17/2013 18:37'!
 initialize
@@ -836,20 +930,29 @@ validPassword
 
 !classDefinition: #TusLibrosRestInterface category: #TusLibros!
 Object subclass: #TusLibrosRestInterface
-	instanceVariableNames: 'catalog paymentProcessor time authenticator userTracker'
+	instanceVariableNames: 'catalog paymentProcessor time authenticator userTracker clientsSalesBook'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros'!
 
-!TusLibrosRestInterface methodsFor: 'as yet unclassified' stamp: 'jcs 6/9/2024 19:14:33'!
+!TusLibrosRestInterface methodsFor: 'initialization' stamp: 'NC 6/10/2024 15:49:47'!
 initializeWithCatalog: aCatalog withPaymentProcessor: aPaymentProcessor withTimekeeping: aTimekeepingObject withAuthenticator: anAuthenticationPlatform
 
 	catalog := aCatalog.
 	paymentProcessor := aPaymentProcessor.
 	time := aTimekeepingObject.
 	authenticator := anAuthenticationPlatform.
-	userTracker := UserTracker new.! !
+	userTracker := UserTracker new.
+	clientsSalesBook := Dictionary new.! !
 
+
+!TusLibrosRestInterface methodsFor: 'runtime assertions' stamp: 'jcs 6/9/2024 18:48:44'!
+assertCartIdIsStillValid: aCartId! !
+
+!TusLibrosRestInterface methodsFor: 'runtime assertions' stamp: 'jcs 6/9/2024 19:34:09'!
+assertUserDoesNotHaveActiveCart: aClientId
+
+	(userTracker isUserActive: aClientId) ifTrue: [self error: self class errorUserCanNotCreateMoreThanOneCart].! !
 
 !TusLibrosRestInterface methodsFor: 'runtime assertions' stamp: 'jcs 6/9/2024 17:56:20'!
 authenticateClientId: aClientId andPassword: aPassword
@@ -858,17 +961,36 @@ authenticateClientId: aClientId andPassword: aPassword
 		ifFalse: [self error: self class errorInvalidCredentials]! !
 
 
-!TusLibrosRestInterface methodsFor: 'rest interface' stamp: 'jcs 6/9/2024 20:42:33'!
+!TusLibrosRestInterface methodsFor: 'rest interface' stamp: 'NC 6/10/2024 12:44:08'!
 addToCart: aCartId bookIsbn: aBookIsbn bookQuantity: aBookQuantity 
 	
 	| aCart |
 	
-	userTracker removeExpiredCartsWithDate: time now.
 	aCart := self cartAssociatedToId: aCartId.
 	aCart add: aBookQuantity of: aBookIsbn.
 	userTracker setLastUsedTime: time now forCartWithId: aCartId.
 
 	! !
+
+!TusLibrosRestInterface methodsFor: 'rest interface' stamp: 'NC 6/10/2024 16:34:53'!
+checkoutCartWithID: aCartID payingWithCCN: aCCNumber CCED: anExpirationDate CCO: anOwnerName
+
+	| creditCard cashier cart clientID total|
+	
+	creditCard := CreditCard expiringOn: anExpirationDate withNumber: aCCNumber withOwner: anOwnerName.
+	cart := self cartAssociatedToId: aCartID.
+	clientID := self clientIDAssociatedToCart: aCartID.
+	cashier :=  Cashier
+		toCheckout: cart 
+		charging: creditCard
+		throught: paymentProcessor 
+		on: time now
+		registeringOn: OrderedCollection new.
+		
+	total := cashier checkOut.
+	self registerSaleForClient: clientID forAmmount: total andItemsOf: cart.
+
+	userTracker deleteCart: aCartID.! !
 
 !TusLibrosRestInterface methodsFor: 'rest interface' stamp: 'jcs 6/9/2024 19:43:55'!
 createCartForClientId: clientId andPassword: password 
@@ -883,29 +1005,22 @@ createCartForClientId: clientId andPassword: password
 	newCartId := userTracker generateIdForCart: newCart associatedToClient: clientId withLastActivityOn: time now.
 	^newCartId! !
 
-!TusLibrosRestInterface methodsFor: 'rest interface' stamp: 'jcs 6/9/2024 20:28:21'!
+!TusLibrosRestInterface methodsFor: 'rest interface' stamp: 'NC 6/10/2024 12:44:15'!
 listCart: aCartId
 	
 	| aCart |
-	
-	userTracker removeExpiredCartsWithDate: time now.
+
 	aCart := self cartAssociatedToId: aCartId.
 	userTracker setLastUsedTime: time now forCartWithId: aCartId.
 	^aCart items! !
 
 
-!TusLibrosRestInterface methodsFor: 'private' stamp: 'jcs 6/9/2024 18:48:44'!
-assertCartIdIsStillValid: aCartId! !
-
-!TusLibrosRestInterface methodsFor: 'private' stamp: 'jcs 6/9/2024 19:34:09'!
-assertUserDoesNotHaveActiveCart: aClientId
-
-	(userTracker isUserActive: aClientId) ifTrue: [self error: self class errorUserCanNotCreateMoreThanOneCart].! !
-
-!TusLibrosRestInterface methodsFor: 'private' stamp: 'jcs 6/9/2024 19:15:29'!
+!TusLibrosRestInterface methodsFor: 'private' stamp: 'NC 6/10/2024 15:58:19'!
 cartAssociatedToId: aCartId
 	
 	| aCart |
+	
+	userTracker removeExpiredCartsWithDate: time now.
 
 	[aCart := userTracker cartAssociatedToId: aCartId]
 		on: Error
@@ -913,28 +1028,49 @@ cartAssociatedToId: aCartId
 	
 	^aCart! !
 
+!TusLibrosRestInterface methodsFor: 'private' stamp: 'NC 6/10/2024 16:02:00'!
+clientIDAssociatedToCart: aCartId
+	
+	^ userTracker clientIDAssociatedToCart: aCartId! !
+
+!TusLibrosRestInterface methodsFor: 'private' stamp: 'NC 6/10/2024 16:22:58'!
+registerSaleForClient: clientID 
+	self shouldBeImplemented.! !
+
+!TusLibrosRestInterface methodsFor: 'private' stamp: 'NC 6/10/2024 16:32:16'!
+registerSaleForClient: clientID forAmmount: aTotalAmmount andItemsOf: aCart
+
+	| purchasedItems |
+	
+	purchasedItems := Bag new .
+	purchasedItems addAll: aCart items.
+	
+	clientsSalesBook add: clientID->(Array with: purchasedItems with: aTotalAmmount)
+	! !
+
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
 !classDefinition: 'TusLibrosRestInterface class' category: #TusLibros!
 TusLibrosRestInterface class
 	instanceVariableNames: ''!
 
-!TusLibrosRestInterface class methodsFor: 'as yet unclassified' stamp: 'jcs 6/9/2024 16:39:20'!
+!TusLibrosRestInterface class methodsFor: 'error descriptions' stamp: 'jcs 6/9/2024 16:39:20'!
 errorInvalidCartId
 
 	^'Invalid cart id'! !
 
-!TusLibrosRestInterface class methodsFor: 'as yet unclassified' stamp: 'jcs 6/9/2024 16:39:06'!
+!TusLibrosRestInterface class methodsFor: 'error descriptions' stamp: 'jcs 6/9/2024 16:39:06'!
 errorInvalidCredentials
 	
 	^'Invalid user credentials'! !
 
-!TusLibrosRestInterface class methodsFor: 'as yet unclassified' stamp: 'jcs 6/9/2024 18:17:00'!
+!TusLibrosRestInterface class methodsFor: 'error descriptions' stamp: 'jcs 6/9/2024 18:17:00'!
 errorUserCanNotCreateMoreThanOneCart
 
 	^'User can not create more than one cart'! !
 
-!TusLibrosRestInterface class methodsFor: 'as yet unclassified' stamp: 'jcs 6/6/2024 23:05:47'!
+
+!TusLibrosRestInterface class methodsFor: 'instance creation' stamp: 'jcs 6/6/2024 23:05:47'!
 withCatalog: aCatalog withPaymentProcessor: aPaymentProcessor withTimekeeping: aTimekeepingObject withAuthenticator: anAunthenticationPlatform
 
 	^self new initializeWithCatalog: aCatalog withPaymentProcessor: aPaymentProcessor withTimekeeping: aTimekeepingObject withAuthenticator: anAunthenticationPlatform! !
@@ -970,6 +1106,18 @@ newCartId
 cartAssociatedToId: aCartId
 
 	^cartAssociatedToId at: aCartId! !
+
+!UserTracker methodsFor: 'user managment' stamp: 'NC 6/10/2024 16:00:48'!
+clientIDAssociatedToCart: aCartId
+
+	^cartIdAssociatedToUser at: aCartId! !
+
+!UserTracker methodsFor: 'user managment' stamp: 'NC 6/10/2024 16:35:42'!
+deleteCart: aCartID
+
+	lastRegisteredActivityForCartId removeKey: aCartID.
+	cartAssociatedToId removeKey: aCartID.
+	cartIdAssociatedToUser removeKey: aCartID.! !
 
 !UserTracker methodsFor: 'user managment' stamp: 'jcs 6/9/2024 19:11:50'!
 generateIdForCart: aCart associatedToClient: aClientId withLastActivityOn: aDate
